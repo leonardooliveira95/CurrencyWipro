@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TesteWipro</name>
+    </assembly>
+    <members>
+        <member name="T:TesteWipro.Controllers.CurrencyController">
+            <summary>
+            Controller for fetching and placing items on a queue
+            </summary>
+        </member>
+        <member name="M:TesteWipro.Controllers.CurrencyController.GetItemFila">
+            <summary>
+            Gets the next currency on the queue
+            </summary>
+            <returns> Next currency on the queue </returns>
+        </member>
+        <member name="M:TesteWipro.Controllers.CurrencyController.AddItemFila(TesteWipro.Logic.Models.Currency)">
+            <summary>
+            Add currency to the queue
+            </summary>
+            <returns> Added currency </returns>
+        </member>
+    </members>
+</doc>
