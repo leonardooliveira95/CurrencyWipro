@@ -25,11 +25,16 @@ namespace TesteWipro.Tests
         [Fact]
         public async void ShouldAddCurrencyToQueue()
         {
-            Currency currency = await this._currencyServices.AddCurrencyToProcessingQueue(new Currency
-            {
-                moeda = "Testing currency",
-                data_inicio = DateTime.Now,
-                data_fim = DateTime.Now.AddDays(1)
+            List<Currency> currency = await this._currencyServices.AddCurrenciesToProcessingQueue(new List<Currency>() 
+            { 
+                new Currency 
+                {
+            
+                    moeda = "Testing currency",
+                    data_inicio = DateTime.Now,
+                    data_fim = DateTime.Now.AddDays(1)
+            
+                }
             });
 
             Assert.NotNull(currency);
@@ -38,42 +43,52 @@ namespace TesteWipro.Tests
         [Fact]
         public async Task ShouldNotAddEmptyCurrency()
         {
-            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrencyToProcessingQueue(null));
+            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrenciesToProcessingQueue(new List<Currency>() { null }));
 
             Assert.IsType<BusinessException>(exception);
-            Assert.Equal("Currency data cannot be null", exception.Message);
+            Assert.Equal("Line 1 - Currency data cannot be null", exception.Message);
         }
 
         [Fact]
         public async Task ShouldNotAddCurrencyWithStartDateAfterEndDate()
         {
-            var currency = new Currency()
+            var currencies = new List<Currency>()
             {
-                moeda = "Testing currency",
-                data_inicio = DateTime.Now.AddDays(1),
-                data_fim = DateTime.Now
+                new Currency
+                {
+
+                    moeda = "Testing currency",
+                    data_inicio = DateTime.Now.AddDays(1),
+                    data_fim = DateTime.Now
+
+                }
             };
 
-            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrencyToProcessingQueue(currency));
+            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrenciesToProcessingQueue(currencies));
 
             Assert.IsType<BusinessException>(exception);
-            Assert.Equal("Start date cannot be after end date", exception.Message);
+            Assert.Equal("Line 1 - Start date cannot be after end date", exception.Message);
         }
 
         [Fact]
         public async Task ShouldNotAddCurrencyWithoutAName()
         {
-            var currency = new Currency()
+            var currencies = new List<Currency>()
             {
-                moeda = "",
-                data_inicio = DateTime.Now,
-                data_fim = DateTime.Now.AddDays(1)
+                new Currency
+                {
+
+                    moeda = "",
+                    data_inicio = DateTime.Now,
+                    data_fim = DateTime.Now.AddDays(1)
+
+                }
             };
 
-            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrencyToProcessingQueue(currency));
+            var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrenciesToProcessingQueue(currencies));
 
             Assert.IsType<BusinessException>(exception);
-            Assert.Equal("Currency name cannot be empty", exception.Message);
+            Assert.Equal("Line 1 - Currency name cannot be empty", exception.Message);
         }
     }
 }
