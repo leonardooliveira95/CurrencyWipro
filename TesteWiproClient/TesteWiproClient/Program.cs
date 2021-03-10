@@ -13,7 +13,6 @@ namespace TesteWiproClient
 {
     class Program
     {
-        private static Timer ProcessCurrenciesTimer;
         private const int RepeatIntervalTimer = 120000; //2 minutes
         private const string CurrencyAPIAddress = "https://localhost:44333/api/";
         private const string CurrencyDataFileHeader = "ID_MOEDA;DATA_REF";
@@ -25,23 +24,29 @@ namespace TesteWiproClient
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Press \'q\' to quit.");
+            InitializeFiles();
 
-            ProcessCurrenciesTimer = new Timer(ProcessCurrencyPrices, null, 0, RepeatIntervalTimer);
-            CurrencyDataFileLines = File.ReadLines("DadosMoeda.csv").ToList();
-            CurrencyPriceDataFileLines = File.ReadLines("DadosCotacao.csv").ToList();
-
-            while (Console.Read() != 'q');
+            while (true) 
+            {
+                ProcessCurrencyPrices();
+                Thread.Sleep(RepeatIntervalTimer);
+            }
         }
 
-        private async static void ProcessCurrencyPrices(Object state)
+        private static void InitializeFiles()
+        {
+            CurrencyDataFileLines = File.ReadLines("DadosMoeda.csv").ToList();
+            CurrencyPriceDataFileLines = File.ReadLines("DadosCotacao.csv").ToList();
+        }
+
+        private static void ProcessCurrencyPrices()
         {
             LogToConsole("Calling currency data API");
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-            List<Currency> result = await CallCurrencyAPI();
+            List<Currency> result = CallCurrencyAPI();
 
             if (result != null && result.Count > 0) 
             {
@@ -72,13 +77,13 @@ namespace TesteWiproClient
 
         }
 
-        private async static Task<List<Currency>> CallCurrencyAPI() 
+        private static List<Currency> CallCurrencyAPI() 
         {
             using (HttpClient client = new HttpClient()) 
             {
                 try
                 {
-                    var responseString = await client.GetStringAsync(CurrencyAPIAddress + "currency/GetItemFila");
+                    var responseString = client.GetStringAsync(CurrencyAPIAddress + "currency/GetItemFila").Result;
 
                     if (!string.IsNullOrEmpty(responseString))
                     {
