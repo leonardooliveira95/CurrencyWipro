@@ -19,31 +19,40 @@ namespace TesteWipro.Logic.Services.Impl
             this._queueContextFactory = queueContextFactory;
         }
 
-        public async Task<Currency> AddCurrencyToProcessingQueue(Currency currency)
+        public async Task<List<Currency>> AddCurrenciesToProcessingQueue(List<Currency> currencies)
         {
-            IQueue<CurrencyModel> queue = this.GetQueue();
+            IQueue<List<CurrencyModel>> queue = this.GetQueue();
 
-            this.ValidateCurrency(currency);
+            int index = 1;
+            foreach (Currency currency in currencies) 
+            {
+                this.ValidateCurrency(currency, index);
 
-            CurrencyModel created = await queue.Enqueue(this.ConvertCurrencyToCurrencyModel(currency));
+                index++;
+            }
 
-            return this.ConvertCurrencyModelToCurrency(created);
+            List<CurrencyModel> created = await queue.Enqueue(currencies.Select(currency => this.ConvertCurrencyToCurrencyModel(currency)).ToList());
+
+            return created.Select(currencyModel => this.ConvertCurrencyModelToCurrency(currencyModel)).ToList();
         }
 
-        public async Task<Currency> GetCurrencyFromQueue()
+        public async Task<List<Currency>> GetCurrenciesFromQueue()
         {
 
-            IQueue<CurrencyModel> queue = this.GetQueue();
+            IQueue<List<CurrencyModel>> queue = this.GetQueue();
 
-            CurrencyModel nextCurrency = await queue.Dequeue();
+            List<CurrencyModel> nextCurrencies = await queue.Dequeue();
 
-            return this.ConvertCurrencyModelToCurrency(nextCurrency);
+            if (nextCurrencies == null)
+                return new List<Currency>();
+
+            return nextCurrencies.Select(x => this.ConvertCurrencyModelToCurrency(x)).ToList();
         }
 
-        private IQueue<CurrencyModel> GetQueue()
+        private IQueue<List<CurrencyModel>> GetQueue()
         {
             IQueueContext queueContext = this._queueContextFactory.CreateNew();
-            IQueue<CurrencyModel> queue = queueContext.GetQueue<CurrencyModel>();
+            IQueue<List<CurrencyModel>> queue = queueContext.GetQueue<List<CurrencyModel>>();
 
             return queue;
         }
@@ -55,9 +64,9 @@ namespace TesteWipro.Logic.Services.Impl
 
             return new Currency
             {
-                EndDate = currency.EndDate,
-                Name = currency.Name,
-                StartDate = currency.StartDate
+                data_fim = currency.EndDate,
+                moeda = currency.Name,
+                data_inicio = currency.StartDate
             };
         }
 
@@ -69,42 +78,42 @@ namespace TesteWipro.Logic.Services.Impl
             return new CurrencyModel
             {
                 Id = Guid.NewGuid(),
-                EndDate = currency.EndDate,
-                StartDate = currency.StartDate,
-                Name = currency.Name
+                EndDate = currency.data_fim,
+                StartDate = currency.data_inicio,
+                Name = currency.moeda
             };
         }
 
-        private void ValidateCurrency(Currency currency) 
+        private void ValidateCurrency(Currency currency, int index) 
         {
             if (currency == null) 
             {
-                throw new BusinessException("Currency data cannot be null");
+                throw new BusinessException($"Line {index} - Currency data cannot be null");
             }
 
-            if (string.IsNullOrEmpty(currency.Name))
+            if (string.IsNullOrEmpty(currency.moeda))
             {
-                throw new BusinessException("Currency name cannot be empty");
+                throw new BusinessException($"Line {index} - Currency name cannot be empty");
             }
 
-            if (currency.StartDate == null) 
+            if (currency.data_inicio == null) 
             {
-                throw new BusinessException("Start date cannot be null");
+                throw new BusinessException($"Line {index} - Start date cannot be null");
             }
 
-            if (currency.EndDate == null)
+            if (currency.data_fim == null)
             {
-                throw new BusinessException("End date cannot be null");
+                throw new BusinessException($"Line {index} - End date cannot be null");
             }
 
-            if (currency.StartDate > currency.EndDate)
+            if (currency.data_inicio > currency.data_fim)
             {
-                throw new BusinessException("Start date cannot be after end date");
+                throw new BusinessException($"Line {index} - Start date cannot be after end date");
             }
 
-            if (currency.StartDate.Date == currency.EndDate.Date)
+            if (currency.data_inicio.Date == currency.data_fim.Date)
             {
-                throw new BusinessException("Start date cannot be the same as end date");
+                throw new BusinessException($"Line {index} - Start date cannot be the same as end date");
             }
         }
     }

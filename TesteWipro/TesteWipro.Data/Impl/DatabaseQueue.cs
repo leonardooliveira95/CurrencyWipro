@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace TesteWipro.Data.Impl
 {
     //Example implementation of a queue that could be saved/retrieved from a database
-    public class DatabaseQueue<TModel> : IQueue<TModel> where TModel : AbstractModel
+    public class DatabaseQueue<TModel> : IQueue<TModel>
     {
         public Task<TModel> Enqueue(TModel item)
         {

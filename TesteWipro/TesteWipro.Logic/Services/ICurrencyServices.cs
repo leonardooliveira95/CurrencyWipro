@@ -8,7 +8,7 @@ namespace TesteWipro.Logic.Services
 {
     public interface ICurrencyServices
     {
-        Task<Currency> GetCurrencyFromQueue();
-        Task<Currency> AddCurrencyToProcessingQueue(Currency currency);
+        Task<List<Currency>> GetCurrenciesFromQueue();
+        Task<List<Currency>> AddCurrenciesToProcessingQueue(List<Currency> currency);
     }
 }

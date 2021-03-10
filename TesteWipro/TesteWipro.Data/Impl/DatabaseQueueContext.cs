@@ -7,7 +7,7 @@ namespace TesteWipro.Data.Impl
 {
     public class DatabaseQueueContext : IQueueContext
     {
-        public IQueue<TModel> GetQueue<TModel>() where TModel : AbstractModel
+        public IQueue<TModel> GetQueue<TModel>()
         {
             //Example stub implementation of a queue that could be saved/retrieved from a database
             //Additional logic for creating the queue could be set here, like logging, localizers and services

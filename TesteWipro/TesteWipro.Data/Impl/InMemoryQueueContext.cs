@@ -16,7 +16,7 @@ namespace TesteWipro.Data.Impl
             this._queues = new ConcurrentDictionary<string, object>();
         }
 
-        public IQueue<TModel> GetQueue<TModel>() where TModel : AbstractModel
+        public IQueue<TModel> GetQueue<TModel>()
         {
             Type type = typeof(TModel);
 

@@ -30,9 +30,9 @@ namespace TesteWipro.Controllers
         /// <returns> Next currency on the queue </returns>
         [HttpGet]
         [Route("GetItemFila")]
-        public async Task<Currency> GetItemFila()
+        public async Task<List<Currency>> GetItemFila()
         {
-            Currency result = await _currencyServices.GetCurrencyFromQueue();
+            List<Currency> result = await _currencyServices.GetCurrenciesFromQueue();
             return result;
         }
 
@@ -42,11 +42,11 @@ namespace TesteWipro.Controllers
         /// <returns> Added currency </returns>
         [HttpPost]
         [Route("AddItemFila")]
-        public async Task<IActionResult> AddItemFila([FromBody] Currency currency)
+        public async Task<IActionResult> AddItemFila([FromBody] List<Currency> currencies)
         {
             try
             {
-                Currency result = await _currencyServices.AddCurrencyToProcessingQueue(currency);
+                List<Currency> result = await _currencyServices.AddCurrenciesToProcessingQueue(currencies);
                 return Ok(result);
             }
             catch (BusinessException ex)

@@ -7,6 +7,6 @@ namespace TesteWipro.Data
 {
     public interface IQueueContext
     {
-        IQueue<TModel> GetQueue<TModel>() where TModel : AbstractModel;
+        IQueue<TModel> GetQueue<TModel>();
     }
 }

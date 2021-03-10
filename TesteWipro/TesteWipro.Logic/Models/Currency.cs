@@ -6,8 +6,8 @@ namespace TesteWipro.Logic.Models
 {
     public class Currency
     {
-        public string Name { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public string moeda { get; set; }
+        public DateTime data_inicio { get; set; }
+        public DateTime data_fim { get; set; }
     }
 }

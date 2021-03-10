@@ -27,9 +27,9 @@ namespace TesteWipro.Tests
         {
             Currency currency = await this._currencyServices.AddCurrencyToProcessingQueue(new Currency
             {
-                Name = "Testing currency",
-                StartDate = DateTime.Now,
-                EndDate = DateTime.Now.AddDays(1)
+                moeda = "Testing currency",
+                data_inicio = DateTime.Now,
+                data_fim = DateTime.Now.AddDays(1)
             });
 
             Assert.NotNull(currency);
@@ -49,9 +49,9 @@ namespace TesteWipro.Tests
         {
             var currency = new Currency()
             {
-                Name = "Testing currency",
-                StartDate = DateTime.Now.AddDays(1),
-                EndDate = DateTime.Now
+                moeda = "Testing currency",
+                data_inicio = DateTime.Now.AddDays(1),
+                data_fim = DateTime.Now
             };
 
             var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrencyToProcessingQueue(currency));
@@ -65,9 +65,9 @@ namespace TesteWipro.Tests
         {
             var currency = new Currency()
             {
-                Name = "",
-                StartDate = DateTime.Now,
-                EndDate = DateTime.Now.AddDays(1)
+                moeda = "",
+                data_inicio = DateTime.Now,
+                data_fim = DateTime.Now.AddDays(1)
             };
 
             var exception = await Assert.ThrowsAsync<BusinessException>(() => this._currencyServices.AddCurrencyToProcessingQueue(currency));

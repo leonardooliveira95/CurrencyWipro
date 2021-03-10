@@ -7,23 +7,30 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace TesteWiproClient
 {
     class Program
     {
         private static Timer ProcessCurrenciesTimer;
-        private const int RepeatIntervalTimer = 5000;//120000; //2 minutes
+        private const int RepeatIntervalTimer = 120000; //2 minutes
         private const string CurrencyAPIAddress = "https://localhost:44333/api/";
         private const string CurrencyDataFileHeader = "ID_MOEDA;DATA_REF";
         private const string CurrencyPriceFileHeader = "vlr_cotacao;cod_cotacao;dat_cotacao";
         private const string ResultingFileHeader = "ID_MOEDA;DATA_REF;VLR_COTACAO";
 
+        private static List<string> CurrencyDataFileLines;
+        private static List<string> CurrencyPriceDataFileLines;
+
         static void Main(string[] args)
         {
-            ProcessCurrenciesTimer = new Timer(ProcessCurrencyPrices, null, 0, RepeatIntervalTimer);
-
             Console.WriteLine("Press \'q\' to quit.");
+
+            ProcessCurrenciesTimer = new Timer(ProcessCurrencyPrices, null, 0, RepeatIntervalTimer);
+            CurrencyDataFileLines = File.ReadLines("DadosMoeda.csv").ToList();
+            CurrencyPriceDataFileLines = File.ReadLines("DadosCotacao.csv").ToList();
+
             while (Console.Read() != 'q');
         }
 
@@ -31,34 +38,61 @@ namespace TesteWiproClient
         {
             LogToConsole("Calling currency data API");
 
-            Currency result = await CallCurrencyAPI();
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
-            if (result != null) 
+            List<Currency> result = await CallCurrencyAPI();
+
+            if (result != null && result.Count > 0) 
             {
                 LogToConsole("API data found, processing files");
 
-                List<CurrencyData> currencyDataResult = ProcessCurrencyDataFile(result);
-                ProcessCurrencyPriceFile(currencyDataResult);
+                List<CurrencyPriceData> resultsToBeWritten = new List<CurrencyPriceData>();
+
+                foreach (Currency currency in result) 
+                {
+                    List<CurrencyData> currencyDataResult = ProcessCurrencyDataFile(currency);
+                    List<CurrencyPriceData> currencyPriceDataResult = ProcessCurrencyPriceFile(currencyDataResult);
+
+                    resultsToBeWritten.AddRange(currencyPriceDataResult);
+                }
+
+                GenerateResultFile(resultsToBeWritten);
             }
             else
             {
-                LogToConsole("No data returned from API");
+                if (result?.Count == 0) 
+                {
+                    LogToConsole("No data returned from API");
+                }
             }
+
+            timer.Stop();
+            LogToConsole($"Total time to process: {timer.Elapsed}");
+
         }
 
-        private async static Task<Currency> CallCurrencyAPI() 
+        private async static Task<List<Currency>> CallCurrencyAPI() 
         {
             using (HttpClient client = new HttpClient()) 
             {
-                var responseString = await client.GetStringAsync(CurrencyAPIAddress + "currency/GetItemFila");
+                try
+                {
+                    var responseString = await client.GetStringAsync(CurrencyAPIAddress + "currency/GetItemFila");
 
-                if (!string.IsNullOrEmpty(responseString))
-                {
-                    Currency result = JsonConvert.DeserializeObject<Currency>(responseString);
-                    return result;
+                    if (!string.IsNullOrEmpty(responseString))
+                    {
+                        List<Currency> result = JsonConvert.DeserializeObject<List<Currency>>(responseString);
+                        return result;
+                    }
+                    else
+                    {
+                        return new List<Currency>();
+                    }
                 }
-                else 
+                catch (HttpRequestException ex) 
                 {
+                    LogToConsole($"Error fetching data from API - {ex.Message}");
                     return null;
                 }
             }
@@ -68,16 +102,14 @@ namespace TesteWiproClient
         {
             LogToConsole("Processing currency data file");
 
-            List<string> lines = File.ReadLines("DadosMoeda.csv").ToList();
-
-            lines = lines.FindAll(line => {
+            List<string> lines = CurrencyDataFileLines.FindAll(line => {
 
                 if (line == CurrencyDataFileHeader)
                     return false;
 
                 CurrencyData data = SplitCurrencyDataFileLine(line);
 
-                return currency.Name == data.Name && (data.Date >= currency.StartDate && data.Date <= currency.EndDate);
+                return currency.moeda == data.Name && (data.Date >= currency.data_inicio && data.Date <= currency.data_fim);
 
             });
 
@@ -98,13 +130,11 @@ namespace TesteWiproClient
             };
         }
 
-        private static void ProcessCurrencyPriceFile(List<CurrencyData> currencyDataResult)
+        private static List<CurrencyPriceData> ProcessCurrencyPriceFile(List<CurrencyData> currencyDataResult)
         {
             LogToConsole("Processing currency prices file");
 
-            List<string> lines = File.ReadLines("DadosCotacao.csv").ToList();
-
-            lines = lines.FindAll(line => {
+            List<string> lines = CurrencyPriceDataFileLines.FindAll(line => {
 
                 if (line == CurrencyPriceFileHeader)
                     return false;
@@ -115,8 +145,7 @@ namespace TesteWiproClient
             });
 
             List<CurrencyPriceData> currencyPriceResult = lines.Select(currencyPriceLine => SplitCurrencyPriceFileLine(currencyPriceLine)).ToList();
-
-            GenerateResultFile(currencyDataResult, currencyPriceResult);
+            return currencyPriceResult;
         }
 
         private static CurrencyPriceData SplitCurrencyPriceFileLine(string line)
@@ -135,7 +164,7 @@ namespace TesteWiproClient
             };
         }
 
-        private static void GenerateResultFile(List<CurrencyData> currencyData, List<CurrencyPriceData> currencyPriceData)
+        private static void GenerateResultFile(List<CurrencyPriceData> currencyPriceData)
         {
             LogToConsole($"Generating results file. { currencyPriceData.Count } results found");
 

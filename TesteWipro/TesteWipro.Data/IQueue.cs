@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TesteWipro.Data
 {
-    public interface IQueue<TModel> where TModel : AbstractModel
+    public interface IQueue<TModel>
     {
         Task<IEnumerable<TModel>> List();
         Task<TModel> Dequeue();

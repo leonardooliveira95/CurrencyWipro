@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace TesteWipro.Data.Impl
 {
-    public class InMemoryQueue<TModel> : IQueue<TModel> where TModel : AbstractModel
+    public class InMemoryQueue<TModel> : IQueue<TModel>
     {
         private readonly ConcurrentQueue<TModel> _queue;
 
